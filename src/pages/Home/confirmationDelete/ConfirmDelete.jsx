@@ -2,11 +2,11 @@ import React from 'react'
 import { useNotes } from '../../../Hooks/useNotes';
 
 function ConfirmDelete() {
-    const {setConfirmDelete,deleteId,deleteNote}=useNotes();
+    const {setDeletedNote,deletedNote,deleteNote}=useNotes();
 
     const handleDelete=()=>{
-        deleteNote(deleteId);
-        setConfirmDelete(false);
+        deleteNote(deletedNote.id);
+        setDeletedNote({confirm:false,id:null});
     }
     return (
         <div className='p-8 bg-[#eee5c4] shadow-2xl w-[400px] rounded-lg'>
@@ -17,7 +17,7 @@ function ConfirmDelete() {
                 onClick={handleDelete}
                 className='bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md transition duration-300'>Delete</button>
                 <button 
-                onClick={()=>setConfirmDelete(false)}
+                onClick={()=>setDeletedNote({confirm:false,id:null})}
                 className='bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md transition duration-300'>Cancel</button>
             </div>
         </div>

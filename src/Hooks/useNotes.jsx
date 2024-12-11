@@ -1,6 +1,7 @@
 import React, { useContext,createContext,useEffect,useState } from "react";
 import axios from "axios";
 import { useAuth } from "./usAuth";
+import { useNotification } from "./useNotification";
 
 const NotesContext=createContext();
 
@@ -12,7 +13,6 @@ export const NotesProvider=({children})=>{
     const [isFilter,setFilter]=useState(false);
     const [loading,setLoading]=useState(true);
     const [users,setUsers]=useState([]);
-
     const [noteById,setNoteById]=useState({
         note:{},
         loading:true
@@ -21,26 +21,28 @@ export const NotesProvider=({children})=>{
     const [showManageNote, setShowManageNote] = React.useState(null);
     // for call fetchNote multi time
     const [notesChanged, setNotesChanged] = useState(false);
-    // for confirm delete
-    const [confirmDelete, setConfirmDelete] = useState(false);
-    // id for delete
-    const [deleteId, setDeleteId] = useState(null);
+    // for Delete
+    const [deletedNote, setDeletedNote] = useState({ confirm: false, id: null });
+    // notification
+    const {setNotification}=useNotification();
+
+
 
     const Api_url='https://notes.devlop.tech/api';
     const token=localStorage.getItem('token');
-
+// filter notes by owner
     const filerNotesByOwner=(notes)=>{
         const filtered=notes.filter((note)=>note.is_owner);
-        console.log(filtered);
-        
         setFilterNotes(filtered);
     }
+    // fetch notes
     useEffect(()=>{
         const fetchNotes = async () => {
             if(!token){
                 setIsAuthenticated(false);
             }
             try{
+                setLoading(true);
                 const response = await axios.get(Api_url+'/notes',{
                     headers:{
                         Authorization: `Bearer ${token}`
@@ -50,8 +52,12 @@ export const NotesProvider=({children})=>{
                 setAllNotes(response.data);
                 filerNotesByOwner(response.data);
             }catch(error){
-                localStorage.removeItem('token');
-                setIsAuthenticated(false);
+                if (error.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    setIsAuthenticated(false);
+                } else {
+                    console.error("Unexpected error:", error);
+                }
             }finally{
                 setLoading(false);
             }
@@ -62,7 +68,7 @@ export const NotesProvider=({children})=>{
 
     useEffect(()=>{
         setNotes(isFilter ? filterNotes : allNotes);
-    },[isFilter,notes])
+    },[isFilter,allNotes,filterNotes])
 
     // add note
     const addNote=async(note)=>{
@@ -70,7 +76,7 @@ export const NotesProvider=({children})=>{
             if(!token){
                 setIsAuthenticated(false);
             }
-            setLoading(true);
+            
             const response=await axios.post(Api_url+'/notes',note,{
                 headers:{
                     Authorization: `Bearer ${token}`
@@ -78,13 +84,16 @@ export const NotesProvider=({children})=>{
             })
             if(response.status===201){
                 setNotesChanged(!notesChanged);
+                setNotification((prev) => ({ ...prev, show: true, type: "success", message: "Note added successfully" }));
                 
             }
         }catch(error){
-            localStorage.removeItem('token');
-            setIsAuthenticated(false);
-        }finally{
-            setLoading(false);
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                setIsAuthenticated(false);
+            } else {
+                console.error("Unexpected error:", error);
+            }
         }
 
     }
@@ -94,7 +103,6 @@ export const NotesProvider=({children})=>{
             if(!token){
                 setIsAuthenticated(false);
             }
-            setLoading(true);
             const response=await axios.put(Api_url+`/notes/${note.id}`,note,{
                 headers:{
                     Authorization: `Bearer ${token}`
@@ -102,12 +110,15 @@ export const NotesProvider=({children})=>{
             })
             if(response.status===200){
                 setNotesChanged(!notesChanged);
+                setNotification((prev) => ({ ...prev, show: true, type: "success", message: "Note updated successfully" }));
             }
         }catch(error){
-            localStorage.removeItem('token');
-            setIsAuthenticated(false);
-        }finally{
-            setLoading(false);
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                setIsAuthenticated(false);
+            } else {
+                console.error("Unexpected error:", error);
+            }
         }
     }
     // delete note
@@ -116,7 +127,7 @@ export const NotesProvider=({children})=>{
             if(!token){
                 setIsAuthenticated(false);
             }
-            setLoading(true);
+            
             const response=await axios.delete(Api_url+`/notes/${id}`,{
                 headers:{
                     Authorization: `Bearer ${token}`
@@ -125,10 +136,15 @@ export const NotesProvider=({children})=>{
             
             if(response.status===200){
                 setNotesChanged(!notesChanged);
+                setNotification((prev) => ({ ...prev, show: true, type: "success", message: "Note deleted successfully" }));
             }
         }catch(error){
-            localStorage.removeItem('token');
-            setIsAuthenticated(false);
+            if (error.response?.status === 401) {
+                localStorage.removeItem('token');
+                setIsAuthenticated(false);
+            } else {
+                console.error("Unexpected error:", error);
+            }
             
         }finally{
             
@@ -152,7 +168,7 @@ export const NotesProvider=({children})=>{
             
             if(response.status===200){
                 setNoteById((prev) => ({ ...prev, note: response.data }));
-                console.log(noteById);
+                
                 
                 
                 
@@ -160,11 +176,18 @@ export const NotesProvider=({children})=>{
             }
 
     }catch(error){
-        console.log(error);
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            setIsAuthenticated(false);
+        } else {
+            console.error("Unexpected error:", error);
+        }
     }finally{
         setNoteById((prev) => ({ ...prev, loading: false }));
     }
 }
+
+
 
 
 useEffect(()=>{
@@ -184,8 +207,12 @@ const getUsers=async()=>{
         }
     
     }catch(error){
-        localStorage.removeItem('token');
-        setIsAuthenticated(false);
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            setIsAuthenticated(false);
+        } else {
+            console.error("Unexpected error:", error);
+        }
     }
 }
 getUsers();
@@ -196,7 +223,7 @@ getUsers();
 
 
     return (
-        <NotesContext.Provider value={{notes,isFilter,setFilter,loading,setLoading,users,getNoteById,isAddmode,setIsAddmode,showManageNote,setShowManageNote,noteById,addNote,updateNote,confirmDelete,setConfirmDelete,deleteId, setDeleteId,deleteNote}}>
+        <NotesContext.Provider value={{notes,isFilter,setFilter,loading,setLoading,users,getNoteById,isAddmode,setIsAddmode,showManageNote,setShowManageNote,noteById,addNote,updateNote,deletedNote, setDeletedNote,deleteNote}}>
             {children}
         </NotesContext.Provider>
     )

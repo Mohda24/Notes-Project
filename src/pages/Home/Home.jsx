@@ -1,17 +1,26 @@
-import React from 'react'
+import React,{useEffect} from 'react'
 import Header from './Header/Header'
 import NoteCard from './note/NoteCard'
 import { useNotes } from '../../Hooks/useNotes'
 import Loading from '../../Animation/loading';
 import ManageNote from './ManageNoteModul/ManageNote';
 import ConfirmDelete from './confirmationDelete/ConfirmDelete';
+import Toast from '../../component/toast';
+import { useNotification } from '../../Hooks/useNotification';
 
 
 
 function Home() {
-    const { notes, isFilter, loading, confirmDelete } = useNotes();
+    const { notes, isFilter, loading, deletedNote } = useNotes();
+    const { notification,setNotification } = useNotification();
+    useEffect(() => {
+        // For Notification
+        setNotification((prev) => ({ ...prev, isLoginPage: false }))
+    },[])
     return (
         <div className='py-10 px-4'>
+            {/* Notification */}
+            {!notification.isLoginPage && <Toast />}
             <Header />
             <div className="Separate w-full h-[1px] bg-secondaryCard-bg opacity-15 mb-10" />
             <div className='notes columns-1 md:columns-3 lg:columns-4 gap-5'>
@@ -28,7 +37,7 @@ function Home() {
                 </>
             </div>
             <ManageNote />
-            {confirmDelete &&
+            {deletedNote.confirm &&
                 <div className='fixed w-full h-full left-0 top-0 bg-[rgba(0,0,0,0.5)] flex items-center justify-center'>
                     <ConfirmDelete />
                 </div>

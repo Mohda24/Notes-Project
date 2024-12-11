@@ -4,7 +4,7 @@ import useOnScreen from "../../../Hooks/useOnScreen"
 import { useNotes } from '../../../Hooks/useNotes'
 
 function NoteCard({ id, title, content, date, is_owner, shared_with }) {
-    const {getNoteById,setIsAddmode,setShowManageNote,setDeleteId,setConfirmDelete}=useNotes();
+    const {getNoteById,setIsAddmode,setShowManageNote,setDeletedNote}=useNotes();
     const noteRef = useRef(null)
     const isVisible = useOnScreen(noteRef, { rootMargin: "0px", threshold: 1 })
 //  handle update note
@@ -15,8 +15,7 @@ function NoteCard({ id, title, content, date, is_owner, shared_with }) {
     }
 //  handle delete note
     const handleDeleteNote = (id) => {
-        setDeleteId(id)
-        setConfirmDelete(true)
+        setDeletedNote({ confirm: true, id: id })
     }
 
     return (

@@ -20,6 +20,7 @@ export default {
         fadeIn: "fadeIn 0.6s ease-in-out forwards",
         show: "show 0.5s ease-in-out forwards",
         offShow: "offShow 0.4s ease-in-out forwards",
+        shoWToast: "shoWToast 1s ease-in-out forwards",
       },
     },
   },

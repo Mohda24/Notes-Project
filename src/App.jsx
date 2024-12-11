@@ -1,14 +1,17 @@
 import React from 'react'
 import AppRouter from './Routes/AppRouter'
-import {AuthProvider} from './Hooks/usAuth'
+import { AuthProvider } from './Hooks/usAuth'
+import { NotificationProvider } from './Hooks/useNotification'
 
 
 
 function App() {
-  return(
+  return (
+    <NotificationProvider>
     <AuthProvider>
-        <AppRouter/>
+        <AppRouter />
     </AuthProvider>
+    </NotificationProvider>
   )
 }
 export default App
